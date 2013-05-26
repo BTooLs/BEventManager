@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title></title>
+    <meta name="description" content=""/>
+    <meta name="keywords" content=""/>
+    <meta name="author" content="B.G.A.">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" src="../jquery-1.10.0.min.js"></script>
+    <script type="text/javascript" src="../beventmanager.js"></script>
+    <script type="text/javascript">
+        eventMgr.define({
+            event: 'onLoad',
+            triggersLeft: 1
+        });
+        eventMgr.on({
+           event       : 'onLoad',
+           callback    : function(){
+               $('#menu').show();
+           }
+        });
+        eventMgr.before({
+            event: 'gameStart',
+            callback: function(){
+                    $('#value').text(0);
+            }
+        });
+        eventMgr.on({
+            event: 'gameStart',
+            callback: function(){
+                    console.log('game started');
+                    $('header').hide();
+            }
+        });
+        eventMgr.on('play',function(){
+               var v = $('#value');
+               v.text(parseInt(v.text()) + 1);
+
+               if (parseInt(v.text()) >= 3){
+                   window.eventMgr.dispatch('gameEnd');
+               }
+       });
+
+       eventMgr.define({
+           event: 'gameEnd',
+           cascadeEvent: 'share'
+       });
+        eventMgr.on('gameEnd',function(){
+                console.log('game ended');
+                $('article').hide();
+            }
+        );
+
+        eventMgr.on({
+           event: 'share',
+           callId: 'facebook',
+           callback: function(){
+               $('footer.facebook').show(500);
+           }
+       });
+        eventMgr.on({
+          event: 'share',
+          callId: 'twitter',
+          queueEnd: false,//put it before facebook !
+          callback: function(){
+              $('footer.twitter').show(500);
+          }
+      });
+
+        //when to trigger our custom events
+        $(document).ready(function(){
+            //after page load OR a manifest of resources ?
+            eventMgr.dispatch('onLoad');
+        });
+
+       function startGame(){
+           $('article').show();
+           eventMgr.dispatch('gameStart');
+       }
+
+      function play(){
+          eventMgr.dispatch('play');
+      }
+
+    </script>
+</head>
+<body>
+<noscript>Your browser does not support JavaScript!</noscript>
+
+<header id="menu" style="display:none;">
+    <button value="Start game" onclick="startGame();">Start</button>
+</header>
+
+<article style="display: none;">
+    <button value="Increment" onclick="play();">Increment value</button>
+    <div>Current value:<span id="value"></span></div>
+</article>
+
+<footer class="facebook" style="display: none;">Share on facebook your great score.</footer>
+<footer class="twitter" style="display: none;">Share on twitter your great score.</footer>
+</body>
+</html>
