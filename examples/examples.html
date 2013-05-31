@@ -9,10 +9,10 @@
     <script type="text/javascript" src="../jquery-1.10.0.min.js"></script>
     <script type="text/javascript" src="../beventmanager.js"></script>
     <script type="text/javascript">
-        eventMgr.define({
-            event: 'onLoad',
-            triggersLeft: 1
-        });
+        eventMgr.eventDebugMode(true);//outputs to browser consoles error msgs
+        /**
+         *  Examples with Loose Mode, cascade events, add listener first.
+         */
         eventMgr.on({
            event       : 'onLoad',
            callback    : function(){
@@ -32,11 +32,15 @@
                     $('header').hide();
             }
         });
-        eventMgr.on('play',function(){
-               var v = $('#value');
-               v.text(parseInt(v.text()) + 1);
 
-               if (parseInt(v.text()) >= 3){
+        //can implement the game login in these events or treat them as second class objects, do secondary actions
+        eventMgr.on('play',function(){
+            var v = $('#value');
+            var value_incremented = parseInt(v.text()) + 1;
+            v.text(value_incremented);
+
+            var reached_the_end = (parseInt(v.text()) >= 3);
+            if (reached_the_end){
                    window.eventMgr.dispatch('gameEnd');
                }
        });
@@ -67,6 +71,9 @@
           }
       });
 
+
+
+
         //when to trigger our custom events
         $(document).ready(function(){
             //after page load OR a manifest of resources ?
@@ -85,6 +92,7 @@
     </script>
 </head>
 <body>
+Examples with Loose Mode, cascade events, add listener first.
 <noscript>Your browser does not support JavaScript!</noscript>
 
 <header id="menu" style="display:none;">
@@ -92,7 +100,7 @@
 </header>
 
 <article style="display: none;">
-    <button value="Increment" onclick="play();">Increment value</button>
+    <button value="Increment" onclick="play();">Increment value until value 3.</button>
     <div>Current value:<span id="value"></span></div>
 </article>
 

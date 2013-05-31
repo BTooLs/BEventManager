@@ -1,10 +1,15 @@
-
-//TODO make this compatible with requirejs
+/*
+    BEventManager - Javascript Custom Event Manager
+    version 0.2
+    31.05.2013
+    http://btools.eu
+    https://github.com/BTooLs/BEventManager/
+ */
 (function(applyTo){
 
     var _events = {};
     var _unique = 0;//helper to generate unique listeners ID's
-    var debug = true;//prints to console error messages
+    var debug = false;//prints to console error messages
     var looseMode = true;//auto define the events, may lead to logic errors / misspells
 
     function _defineEvent(params){
@@ -26,7 +31,7 @@
             if (looseMode){
                 _defineEvent({event: params.cascadeEvent});//define it
             } else {
-                debug && console.log('err: cascadeEvent not defined');
+                debug && console.log('err: cascadeEvent not defined', params.cascadeEvent);
                 return false;
             }
         }
@@ -45,6 +50,7 @@
         try{
             delete _events[event];
         }catch(e){}
+
         //delete it from the cascade if found
         for (var i in _events){
             if (_events[i].cascadeEvent === event){
@@ -53,34 +59,32 @@
         }
     };
 
-    /**
-     * Creates an event.
-     * @param params Params = {event           : false,//string, unique name of event
-                      triggersLeft    : false,//numeric, counts of triggers until it's auto-destruct
-                      cascadeEvent    : false //string, name of another event }
-     * @return {*}
-     */
-    this.define = function(params){
-        if (typeof(params) == 'undefined' || typeof(params.event) !== 'string' ){
-            debug && console.log('err: event name missing');
-            return false;
-        }
+    this.define = function(/* list of events to be defined */){
+        var result = false;
+        for (var i = 0 ; i < arguments.length; i++){
+            var params = arguments[i];
+            if (typeof(params) == 'undefined' || typeof(params.event) !== 'string' ){
+                debug && console.log('err: event name missing');
+                result = false;
+                continue;
+            }
 
-        //sanity check and restrict bad values
-        var toParams = {
-            event: params.event
-        }
+            //sanity check and restrict bad options
+            var toParams = {
+                event: params.event
+            };
 
-        if ((typeof(params.triggersLeft) == 'number' && params.triggersLeft > 0)
-                || params.triggersLeft === false){
-            toParams.triggersLeft = params.triggersLeft;
-        }
+            if ((typeof(params.triggersLeft) == 'number' && params.triggersLeft > 0)
+                    || params.triggersLeft === false){
+                toParams.triggersLeft = params.triggersLeft;
+            }
 
-        if (typeof(params.cascadeEvent) == 'string' || params.cascadeEvent === false){
-            toParams.cascadeEvent = params.cascadeEvent;
+            if (typeof(params.cascadeEvent) == 'string' || params.cascadeEvent === false){
+                toParams.cascadeEvent = params.cascadeEvent;
+            }
+            result =  _defineEvent(toParams);
         }
-
-        return _defineEvent(toParams);
+        return result;
     };
 
     /**
@@ -108,7 +112,7 @@
            if (looseMode){
                _defineEvent({event: params.event});//auto define the event
            } else {
-               debug && console.log('err: event not defined');
+               debug && console.log('err: event not defined',params.event);
                return false;
            }
        }
@@ -193,7 +197,7 @@
     };
 
     this.unlisten = function(event, type, callId){
-        if (event && (type === 'on' || type == 'before' || type == 'after') && callId){
+        if (event && type && (type === 'on' || type == 'before' || type == 'after') && typeof(callId) != 'undefined'){
             return _undefineListener(event, type, callId);
         }
         debug && console.log('err: wrong parameters');
@@ -206,10 +210,11 @@
             return false;
         }
 
-        var len = _events[type];
+        debug && console.log('undefining',event, type, callId);
+        var len = _events[event][type].length;
         for (var i = 0; i < len; i++){
-            if (_events[type][i].callId == callId){
-                _events[type].splice(i,1);
+            if (_events[event][type][i].callId == callId){
+                _events[event][type].splice(i,1);
                 break;
             }
         }
@@ -252,6 +257,7 @@
             debug && console.log('err: trigger event not exists',event);
             return false;
         }
+        debug && console.log('dispatching ',event);
 
         _events[event].before.length &&  _dispatchListeners(event,'before');
         _events[event].on.length &&  _dispatchListeners(event,'on');
@@ -262,6 +268,7 @@
             //setTimeout to make another thread ?
             this.dispatch(_events[event].cascadeEvent);
         }
+
         //has a limited number of triggers ?
        if (typeof(_events[event].triggersLeft) === 'number'
            && (--_events[event].triggersLeft <= 0)){
@@ -289,4 +296,7 @@
     }
 
     return applyTo.eventMgr = this;
+
+//TODO make this compatible with requirejs
+//TODO make this jQuery plugin
 })(window);//end event Manager

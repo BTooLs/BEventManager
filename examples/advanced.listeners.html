@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title></title>
+    <meta name="description" content=""/>
+    <meta name="keywords" content=""/>
+    <meta name="author" content="B.G.A.">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" src="../jquery-1.10.0.min.js"></script>
+    <script type="text/javascript" src="../beventmanager.js"></script>
+    <style>
+        .green {background-color: green;}
+        .red {background-color: red;}
+        .blue {background-color: blue;}
+    </style>
+    <script type="text/javascript">
+        eventMgr.eventDebugMode(true);//outputs to browser consoles error msgs
+        var listenerAutoId = null;
+
+        /**
+         * Advanced usage of listeners.
+         */
+        function init(){
+            var e = eventMgr;
+
+            // We can define multiple events by one call, or separately
+            e.define(
+                         {event:'onLoad'},
+                         {event:'selectItem'}
+            );
+
+            //we add all three listeners, and we can manually removed them after
+            e.on({
+                event: 'selectItem',
+                callId: 'listener1',
+                callback: function(){
+                    $('#u1').attr('class',sendColor);
+                }
+            });
+
+            e.on({
+                event: 'selectItem',
+                callId: 'listener2',
+                callback: function(){
+                    $('#u2').attr('class',sendColor);
+                }
+            });
+            e.on({
+                event: 'selectItem',
+                callId: 'listener3',
+                callback: function(){
+                    $('#u3').attr('class',sendColor);
+                }
+            });
+
+            //no callId = it will generate an unique one
+            listenerAutoId =  e.on({
+                event: 'selectItem',
+                callback: function(){
+                    $('#u4').attr('class',sendColor);
+                }
+            });
+
+            e.after('onLoad',function(){
+                $('header').show();
+                $('.item').click(function(){
+                   sendColor = $(this).attr('id');
+                   eventMgr.dispatch('selectItem');
+               });
+            });
+
+        }
+
+        function deleteListener(id){
+            eventMgr.unlisten('selectItem', 'on', id);
+        }
+
+        //when to trigger our custom events
+        $(document).ready(function(){
+            init();
+            //after page load OR a manifest of resources ?
+            eventMgr.dispatch('onLoad');
+        });
+
+    </script>
+</head>
+<body>
+Advanced usage of listeners.
+
+<header style="display:none;">
+    <button id="green" class="item">Simon says: green</button>
+    <button id="red" class="item">Simon says: red</button>
+    <button id="blue" class="item">Simon says: blue</button>
+</header>
+
+<article>
+    <span id="u1">Listener 1</span>
+    <span id="u2">Listener 2</span>
+    <span id="u3">Listener 3</span>
+    <span id="u4">Listener Auto</span>
+</article>
+<footer>
+    <button class="remove" onclick="deleteListener('listener1');">Remove listener 1</button>
+    <button class="remove" onclick="deleteListener('listener2');">Remove listener 2</button>
+    <button class="remove" onclick="deleteListener('listener3');">Remove listener 3</button>
+    <button class="remove" onclick="deleteListener(listenerAutoId);">Remove listener Auto</button>
+</footer>
+</body>
+</html>

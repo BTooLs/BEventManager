@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title></title>
+    <meta name="description" content=""/>
+    <meta name="keywords" content=""/>
+    <meta name="author" content="B.G.A.">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" src="../jquery-1.10.0.min.js"></script>
+    <script type="text/javascript" src="../beventmanager.js"></script>
+    <script type="text/javascript">
+        eventMgr.eventDebugMode(true);//outputs to browser consoles error msgs
+        eventMgr.eventLooseMode(false);//disable loose mode, enable strict mode
+
+        /**
+         * Strict mode example. We must pre-define all of our events.
+         */
+        function init(){
+            var e = eventMgr;
+
+            // We can define multiple events by one call, or separately
+            e.define(
+                         {event:'onLoad'},
+                         {event:'displayBanner', triggersLeft: 1},//display a commercial banner once in a session
+                         {event:'displayTable', cascadeEvent: 'displayBanner'},//define it before use it in the cascadeEvent
+                         {event:'selectItem', cascadeEvent:'displayTable'}
+            );
+
+            //we can even check if the definition was a success
+            if (false === e.define({event:'onLoad'})){
+                console.log('My Error !');
+            };
+
+            e.on('displayTable',function(){
+                $('article').show();
+            });
+
+            e.after('onLoad',function(){$('header').show();});
+
+            //try to add an listener to an un-existent event
+            eventMgr.on('finish',function(){/**do nothing*/});
+
+            //try to dispatch an un-existent event
+            eventMgr.dispatch('play');
+
+        }
+
+        //when to trigger our custom events
+        $(document).ready(function(){
+            init();
+            //after page load OR a manifest of resources ?
+            eventMgr.dispatch('onLoad');
+
+            $('.item').click(function(){
+               eventMgr.dispatch('selectItem');
+            });
+        });
+
+    </script>
+</head>
+<body>
+Strict mode example. We must pre-define all of our events.
+
+<header style="display:none;">
+    <button class="item">Item 1</button><button class="item">Item 2</button>
+</header>
+
+<article style="display: none;">
+    Ta Da !
+</article>
+
+</body>
+</html>
