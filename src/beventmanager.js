@@ -1,6 +1,6 @@
 /*
     BEventManager - Javascript Custom Event Manager
-    version 0.2
+    version 0.3
     31.05.2013
     http://btools.eu
     https://github.com/BTooLs/BEventManager/
@@ -18,7 +18,7 @@
             return false;//already defined
         }
 
-        params = $.extend({},{
+        params = extend({},{
             event           : false,//string, unique name of event
             triggersLeft    : false,//numeric, counts of triggers until it's auto-destruct
             before          : [],//list of listeners triggered before event
@@ -31,7 +31,7 @@
             if (looseMode){
                 _defineEvent({event: params.cascadeEvent});//define it
             } else {
-                debug && console.log('err: cascadeEvent not defined', params.cascadeEvent);
+                debug && log('err: cascadeEvent not defined', params.cascadeEvent);
                 return false;
             }
         }
@@ -64,7 +64,7 @@
         for (var i = 0 ; i < arguments.length; i++){
             var params = arguments[i];
             if (typeof(params) == 'undefined' || typeof(params.event) !== 'string' ){
-                debug && console.log('err: event name missing');
+                debug && log('err: event name missing');
                 result = false;
                 continue;
             }
@@ -87,6 +87,10 @@
         return result;
     };
 
+    this.eventIsDefined = function(event){
+        return (typeof(_events[event]) !== 'undefined');
+    };
+
     /**
      * Destroy an event and it's listeners, and removes itself as cascade event if any.
      * @param event
@@ -94,11 +98,11 @@
      */
     this.undefine = function(event){
         return _undefineEvent(event);
-    }
+    };
 
     //add a custom callback function to be called when an event triggers
     function _defineListener(params,type){
-        params = $.extend({},{
+        params = extend({},{
                    event       : false,//string, name of the event we attach it
                    callId      : false,//unique identifier of the callback
                    callback    : false,//the function itself
@@ -112,13 +116,13 @@
            if (looseMode){
                _defineEvent({event: params.event});//auto define the event
            } else {
-               debug && console.log('err: event not defined',params.event);
+               debug && log('err: event not defined at listener create',params.event);
                return false;
            }
        }
        if ( ! params.event
            || typeof(params.callback) != 'function'){
-           debug && console.log('err: callback not valid',params);
+           debug && log('err: listener/callback not a function',params);
            return false;
        }
 
@@ -128,7 +132,7 @@
            var len = _events[params.event][type].length;
            for (var i = 0; i < len; i++){
                if (_events[params.event][type][i].callId == params.callId){
-                   debug && console.log('err: callId already used for this event/type');
+                   debug && log('err: callId already used for this event/type');
                    return false;
                }
            }
@@ -162,7 +166,7 @@
                 callback: arguments[1]
             };
         } else {
-            debug && console.log('err: wrong number of parameters (on)');
+            debug && log('err: wrong number of parameters (on)');
             return false;
         }
         return _defineListener(params,'on');
@@ -176,7 +180,7 @@
                callback: arguments[1]
            };
         } else {
-           debug && console.log('err: wrong number of parameters (on)');
+           debug && log('err: wrong number of parameters (on)');
            return false;
         }
         return _defineListener(params,'before');
@@ -190,7 +194,7 @@
                callback: arguments[1]
            };
         } else {
-           debug && console.log('err: wrong number of parameters (on)');
+           debug && log('err: wrong number of parameters (on)');
            return false;
         }
         return _defineListener(params,'after');
@@ -200,17 +204,17 @@
         if (event && type && (type === 'on' || type == 'before' || type == 'after') && typeof(callId) != 'undefined'){
             return _undefineListener(event, type, callId);
         }
-        debug && console.log('err: wrong parameters');
+        debug && log('err: wrong parameters');
         return false;
     }
 
     function _undefineListener(event, type, callId){
         if (_events[event] == undefined){
-            debug && console.log('err: event not exists');
+            debug && log('err: event not exists');
             return false;
         }
 
-        debug && console.log('undefining',event, type, callId);
+        debug && log('undefining',event, type, callId);
         var len = _events[event][type].length;
         for (var i = 0; i < len; i++){
             if (_events[event][type][i].callId == callId){
@@ -229,12 +233,12 @@
      */
     function _dispatchListeners(event,type){
 
-        debug && console.log('dispatching ',event,type);
+        debug && log('dispatching ',event,type);
         var len = _events[event][type].length;
         for (var i=0; i < len; i++){
            var call = _events[event][type][i];
 
-           debug && console.log('calling ',call.callId);
+           debug && log('calling listener',call.callId);
            //actual Calling
            call.callback.call(call.thisArg, call.argsArray);
 
@@ -254,10 +258,10 @@
      */
     this.dispatch = function(event){
          if (typeof(_events[event]) == 'undefined'){
-            debug && console.log('err: trigger event not exists',event);
+            debug && log('err: trigger event not exists',event);
             return false;
         }
-        debug && console.log('dispatching ',event);
+        debug && log('dispatching ',event);
 
         _events[event].before.length &&  _dispatchListeners(event,'before');
         _events[event].on.length &&  _dispatchListeners(event,'on');
@@ -295,8 +299,90 @@
         return _events;
     }
 
+    /**
+     * Cleans all the events and listeners, internally.
+     */
+    this.eventDestroy = function(){
+        _events = {};
+        _unique = 0;
+    }
+
+    function log(){
+        //TODO make this work with util.print nodeJS function too
+        if ( ! console || ! typeof(console.log) == 'function')
+            return false;
+
+        //transform arguments to array and add a module prefix
+        var toPrint = ['EventMgr:'].concat(Array.prototype.slice.call(arguments));
+        console.log.apply(this, toPrint);
+        return true;
+    }
+    /** Thanks to jQuery - 1.10.1 */
+    function extend() {
+    	var src, copyIsArray, copy, name, options, clone,
+    		target = arguments[0] || {},
+    		i = 1,
+    		length = arguments.length,
+    		deep = false;
+
+    	// Handle a deep copy situation
+    	if ( typeof target === "boolean" ) {
+    		deep = target;
+    		target = arguments[1] || {};
+    		// skip the boolean and the target
+    		i = 2;
+    	}
+
+    	// Handle case when target is a string or something (possible in deep copy)
+    	if ( typeof target !== "object" && !jQuery.isFunction(target) ) {
+    		target = {};
+    	}
+
+    	// extend jQuery itself if only one argument is passed
+    	if ( length === i ) {
+    		target = this;
+    		--i;
+    	}
+
+    	for ( ; i < length; i++ ) {
+    		// Only deal with non-null/undefined values
+    		if ( (options = arguments[ i ]) != null ) {
+    			// Extend the base object
+    			for ( name in options ) {
+    				src = target[ name ];
+    				copy = options[ name ];
+
+    				// Prevent never-ending loop
+    				if ( target === copy ) {
+    					continue;
+    				}
+
+    				// Recurse if we're merging plain objects or arrays
+    				if ( deep && copy && ( jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy)) ) ) {
+    					if ( copyIsArray ) {
+    						copyIsArray = false;
+    						clone = src && jQuery.isArray(src) ? src : [];
+
+    					} else {
+    						clone = src && jQuery.isPlainObject(src) ? src : {};
+    					}
+
+    					// Never move original objects, clone them
+    					target[ name ] = jQuery.extend( deep, clone, copy );
+
+    				// Don't bring in undefined values
+    				} else if ( copy !== undefined ) {
+    					target[ name ] = copy;
+    				}
+    			}
+    		}
+    	}
+
+    	// Return the modified object
+    	return target;
+    };
+
     return applyTo.eventMgr = this;
 
 //TODO make this compatible with requirejs
-//TODO make this jQuery plugin
 })(window);//end event Manager

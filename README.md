@@ -1,7 +1,7 @@
 BEventManager
 =============
     BEventManager - Javascript Custom Event Manager
-    version 0.2
+    version 0.3
     31.05.2013
     http://btools.eu
     https://github.com/BTooLs/BEventManager/
@@ -14,8 +14,7 @@ When to use this class ? Was created for these cases in mind:
 * event-driven programming in JavaScript (EDP)
 
 ##Requirements
-* jQuery - only for extend() function
-* console.log - change it for nodeJS
+* javascript environment
 
 ###Features - Events
 * add your own events and dispatch them manually
@@ -37,11 +36,9 @@ Any clone / feedback / help / test is appreciated.
 
 ####To Do
 * copy the listener callback function, not use as reference
-* create internal log function
 * make it work with nodeJS (including log function)
 * add option to setTimeouts on listeners
 * add try/catch blocks and make it more secure
-* make error messages meaningful
 * optimize it for large listeners queues
 * make it ready for requireJS as a module
 * option to lock/disable parallel/async event triggering - unable to dispatch if the previous run didn't finished to
