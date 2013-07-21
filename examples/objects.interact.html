@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title></title>
+    <meta name="description" content=""/>
+    <meta name="keywords" content=""/>
+    <meta name="author" content="B.G.A.">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" src="../lib/jquery-1.10.0.min.js"></script>
+    <script type="text/javascript" src="../src/beventmanager.js"></script>
+    <script type="text/javascript">
+        eventMgr.eventDebugMode(true);//outputs to browser consoles error msgs
+
+        /** Game logic */
+        var Game = {
+            lastScoringPlayer: '',
+            lastScoring: 0,
+            play: function(lastScoreName, lastScorePoints){
+                this.lastScoringPlayer = lastScoreName;
+                this.lastScoring = lastScorePoints;
+            }
+        };
+
+        var Player = function(name){
+            this.name = name;
+            this.score = 0;
+            this.enemyScore = 0;
+            this.press = function(addition){
+                this.score += addition;
+            };
+            this.enemyPress = function(addition){
+                this.enemyScore += addition;
+            };
+        };
+        var PlayerA = new Player('Player A');
+        var PlayerB = new Player('Player B');
+
+        /** Player A listeners */
+        eventMgr.on(
+            {
+                event: 'pressA',
+                callback: PlayerA.press,
+                thisArg: PlayerA
+          });
+        eventMgr.after(
+            {
+                event: 'pressA',
+                callback: PlayerB.enemyPress,
+                thisArg: PlayerB
+          });
+        eventMgr.after(
+            {
+                event: 'pressA',
+                callback: Game.play,
+                thisArg: Game,
+                //here is a trick, the argsArray is sent along with the data in the dispatch event
+                //the Play will take 2 arguments, first name from here and second the score at dispatch
+                argsArray: [PlayerA.name]
+          });
+
+        /** Player B listeners */
+        eventMgr.on(
+            {
+                event: 'pressB',
+                callback: PlayerB.press,
+                thisArg: PlayerB
+          });
+        eventMgr.after(
+            {
+                event: 'pressB',
+                callback: PlayerA.enemyPress,
+                thisArg: PlayerA
+          });
+        eventMgr.after(
+            {
+                event: 'pressB',
+                callback: Game.play,
+                thisArg: Game,
+                //here is a trick, the argsArray is sent along with the data in the dispatch event
+                //the Play will take 2 arguments, first name from here and second the score at dispatch
+                argsArray: [PlayerB.name]
+          });
+
+
+        /** Alternative:
+         * define events pressA and pressB with a cascade of a third event (anyPlayerPressed)
+         * The pointsMade (data) is sent to cascade events too. In this case we will not know what player
+         * pressed, just by how much. To overcome we will need another variable or to modify the parameters and send
+         * the name of the player to themselves too.
+         */
+
+        /** U.I. init */
+        $(document).ready(function(){
+            $('.item').click(function(){
+                var player = $(this).attr('id');
+                var pointsMade = 1;
+                //send a simple value or an array of arguments that will be passed to ALL listeners called
+               eventMgr.dispatch('press' + player, pointsMade);
+
+                console.log('Last scoring : ', Game.lastScoringPlayer,':',Game.lastScoring);
+                console.log( PlayerA.name, ':', PlayerA.score,' vs ', PlayerA.enemyScore);
+                console.log( PlayerB.name, ':', PlayerB.score,' vs ', PlayerB.enemyScore);
+            });
+        })
+    </script>
+</head>
+<body>
+Send data when dispatching events and advanced usage of listeners argument arrays.
+
+<header>
+    <button id="A" class="item">Score player A</button>
+    <button id="B" class="item">Score player B</button>
+</header>
+
+</body>
+</html>
