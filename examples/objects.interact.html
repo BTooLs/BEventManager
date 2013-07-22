@@ -9,7 +9,8 @@
     <script type="text/javascript" src="../lib/jquery-1.10.0.min.js"></script>
     <script type="text/javascript" src="../src/beventmanager.js"></script>
     <script type="text/javascript">
-        eventMgr.eventDebugMode(true);//outputs to browser consoles error msgs
+        var eventMgr = new EventManager();
+        eventMgr.setDebugMode(true);//outputs to browser consoles error msgs
 
         /** Game logic */
         var Game = {

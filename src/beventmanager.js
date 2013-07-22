@@ -1,6 +1,6 @@
 /*
     BEventManager - Javascript Custom Event Manager
-    version 0.4
+    version 0.4.2
     21.07.2013
     http://btools.eu
     https://github.com/BTooLs/BEventManager/
@@ -111,7 +111,9 @@
                        thisArg     : window,
                        argsArray   : [],
                        triggersLeft: false,//number or calls left before auto destroy
-                       queueEnd    : true //add at the end of queue, false to add as first (override callback order)
+                       queueEnd    : true, //add at the end of queue, false to add as first (override callback order)
+                       delay       : 0, //adds a delay at calling (setTimeout) in ms
+                       timeout     : null //used to keep the timeout id, if any, for the ability to clear it
            },params);
 
            if (typeof(_events[params.event]) == 'undefined'){
@@ -159,9 +161,9 @@
         }
 
         this.on =  function(/**mixins*/){
-            if (arguments.length == 1){
+            if (arguments.length === 1){
                 var params = arguments[0];
-            } else if (arguments.length == 2){
+            } else if (arguments.length === 2){
                 var params = {
                     event: arguments[0],
                     callback: arguments[1]
@@ -172,10 +174,10 @@
             }
             return _defineListener(params,'on');
         };
-        this.before =  function(params){
-            if (arguments.length == 1){
-                   var params = arguments[0];
-            } else if (arguments.length == 2){
+        this.before =  function(/**mixins*/){
+            if (arguments.length === 1){
+               var params = arguments[0];
+            } else if (arguments.length === 2){
                var params = {
                    event: arguments[0],
                    callback: arguments[1]
@@ -186,10 +188,10 @@
             }
             return _defineListener(params,'before');
         };
-        this.after =  function(){
-            if (arguments.length == 1){
+        this.after =  function(/**mixins*/){
+            if (arguments.length === 1){
                var params = arguments[0];
-            } else if (arguments.length == 2){
+            } else if (arguments.length === 2){
                var params = {
                    event: arguments[0],
                    callback: arguments[1]
@@ -227,7 +229,7 @@
         };
 
         /**
-         * Triggeres a series of callbacks attacked to a specific event and list
+         * Triggers a series of callbacks attacked to a specific event and list
          * @param event Name of the event
          * @param type Type (before,on,after)
          * @param data Array of data will be passed along with args Array
@@ -243,22 +245,33 @@
                 (function(){
                    var call = _events[event][type][i];
 
+                    //TODO make a separate function for the actual calling to remove duplicate code
                    //actual Calling
-                    if (dispatchTimeout){
-                        setTimeout(function(){
+                    if (dispatchTimeout || call.delay > 0){
+                        call.timeout = setTimeout(function(){
                             call.callback.apply(call.thisArg, call.argsArray.concat(data));
+                            call.timeout = null;
                             debug && log('calling listener',call.callId);
-                        },0);
+
+                            //decrement and/or remove if necessary
+                            if (typeof(call.triggersLeft) === 'number'){
+                                if (--call.triggersLeft <= 0){
+                                    _undefineListener(event, type, call.callId)
+                                }
+                            }
+
+                        }, call.delay);
                     }
                     else {
                         call.callback.apply(call.thisArg, call.argsArray.concat(data));
                         debug && log('calling listener',call.callId);
-                    }
 
-                    //decrement and/or remove if necessary
-                    if (typeof(call.triggersLeft) === 'number'){
-                        if (--call.triggersLeft <= 0){
-                            _undefineListener(event, type, call.callId)
+
+                        //decrement and/or remove if necessary
+                        if (typeof(call.triggersLeft) === 'number'){
+                            if (--call.triggersLeft <= 0){
+                                _undefineListener(event, type, call.callId)
+                            }
                         }
                     }
                 })();
@@ -298,17 +311,25 @@
         };
 
         /**
-         * Enable or disable the looseMode.
+         * Enable or disable the looseMode (pre-defining events)
          * @param value
          */
-        this.eventLooseMode = function(value){
-            looseMode = (value);
+        this.setLooseMode = function(value){
+            looseMode = !!(value);
         };
-        this.eventDebugMode = function(value){
-            debug = (value);
+        /**
+         * Enable or disable debug mode (messages in console)
+         * @param value
+         */
+        this.setDebugMode = function(value){
+            debug = !!(value);
         };
-        this.eventDispatchTimeout = function(value){
-            dispatchTimeout = (value);
+        /**
+         * Enable or disable the setTimeout call listeners (for execution stacks)
+         * @param value
+         */
+        this.setDispatchTimeout = function(value){
+            dispatchTimeout = !!(value);
         };
         /**
          * Returns the events big object.
@@ -321,7 +342,7 @@
         /**
          * Cleans all the events and listeners, internally.
          */
-        this.eventDestroy = function(){
+        this.destroy = function(){
             _events = {};
             _unique = 0;
         };
@@ -406,7 +427,7 @@
     //if (typeof exports !== 'undefined') {
     //  module.exports = EventManager;
     //} else if (typeof window !== 'undefined'){
-      window.eventMgr = new EventManager;
+      window.EventManager = EventManager;
     //} else {
         //error do some fallback ?!
     //}

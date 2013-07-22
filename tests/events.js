@@ -1,8 +1,8 @@
 
 describe("Events", function() {
-    var e = window.eventMgr;
+    var e = new EventManager();
     beforeEach(function() {
-        e.eventDestroy();
+        e.destroy();
     });
 
     describe("should be able to define and undefine an event >>",function(){
@@ -32,7 +32,7 @@ describe("Events", function() {
     describe("should be able to define a limited number of triggers event >>",function(){
 
         beforeEach(function() {
-            e.eventDestroy();
+            e.destroy();
             e.define({event:"anEvent", triggersLeft: 2});
         });
 
@@ -60,7 +60,7 @@ describe("Events", function() {
             };
             text = {value:''};
 
-            e.eventDestroy();
+            e.destroy();
             e.define({event:"anEvent"});
 
             spyOn(calls,"call_before");
@@ -138,7 +138,7 @@ describe("Events", function() {
         var obj = {callback : function(){return 1+1;}};
 
         beforeEach(function() {
-            e.eventDestroy();
+            e.destroy();
             e.define({event:"anEvent"});
 
             spyOn(obj, "callback");
@@ -174,17 +174,17 @@ describe("Events", function() {
 
     describe("test the loost/strict event defining mode",function(){
         beforeEach(function() {
-            e.eventDestroy();
+            e.destroy();
         });
 
         it("should work to add listener w/o defining the event, when loose mode is on",function(){
-            e.eventLooseMode(true);
+            e.setLooseMode(true);
             e.on('anEvent',function(){return 1+1;});
             expect(e.eventIsDefined('anEvent')).toBeTruthy();
         });
 
         it("should Not work to auto-define an event when in strict mode",function(){
-            e.eventLooseMode(false);
+            e.setLooseMode(false);
             e.on('anEvent',function(){return 1+1;});
             expect(e.eventIsDefined('anEvent')).toBeFalsy();
         });
@@ -195,7 +195,7 @@ describe("Events", function() {
         var callId = 'someListener';
 
         beforeEach(function() {
-            e.eventDestroy();
+            e.destroy();
             e.define({event:"anEvent"});
 
             spyOn(obj, "callback");
@@ -223,5 +223,78 @@ describe("Events", function() {
 
         expect(e.on({event: 'anEvent', callId: 'oneTrigger', callback: function(){}})).toEqual('oneTrigger');
         expect(e.on({event: 'anEvent', callId: 'oneTrigger', callback: function(){}})).toBeFalsy();
+    });
+
+
+    describe("should be able to define arguments passed to listeners  >>",function(){
+        var p1 = 'p1';
+        var p2 = 'p2';
+        var p3 = 'p3';
+        var obj = {callback : function(){return this;}};
+
+        beforeEach(function() {
+            e.destroy();
+            e.define({event:"anEvent"});
+
+            spyOn(obj, "callback");
+            e.on({
+                event: 'anEvent',
+                callback: obj.callback,
+                thisArg: obj,
+                argsArray: [p1, p2]
+             });
+        });
+
+        //TODO make this work
+        xit("the callback should be called in the right environment (this)",function(){
+                    e.dispatch('anEvent');
+                    expect(obj.callback).toHaveBeenCalledWith(p1, 'p2');
+                });
+
+        it("the sent values should not modify in the process",function(){
+            e.dispatch('anEvent');
+            expect(obj.callback).toHaveBeenCalledWith(p1, 'p2');
+        });
+
+        it("the dispatch values should concatenate with the argsArray of the listener",function(){
+            e.dispatch('anEvent', p3);
+            expect(obj.callback).toHaveBeenCalledWith(p1, 'p2', 'p3');
+        });
+    });
+
+
+
+    //TODO make this work with jasmine, it seems at first run the runs / obj visibility not working
+    xdescribe("delay feature of a listener should work >>",function(){
+        var obj = null;
+        beforeEach(function() {
+            obj = {callback: function(){}};
+            spyOn(obj, 'callback');
+
+            e.on(
+                {
+                    event: 'anEvent',
+                    callback: obj.callback,
+                    thisArg: obj,
+                    delay: 100
+                }
+            );
+        });
+
+        it("the callback should be called one time after the specified delay",function(){
+
+            runs(function() {
+                e.dispatch('anEvent');
+                expect(obj.callback.calls.length).toEqual(0);
+           });
+
+            waitsFor(function() {
+                    return (obj.callback.calls.length > 0);
+              }, "the listener wasn't triggered", 200);//max waiting time
+
+            runs(function(){
+                expect(obj.callback.calls.length).toEqual(1);
+            })
+        });
     });
 });

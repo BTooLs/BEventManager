@@ -9,8 +9,9 @@
     <script type="text/javascript" src="../lib/jquery-1.10.0.min.js"></script>
     <script type="text/javascript" src="../src/beventmanager.js"></script>
     <script type="text/javascript">
-        eventMgr.eventDebugMode(true);//outputs to browser consoles error msgs
-        eventMgr.eventLooseMode(false);//disable loose mode, enable strict mode
+        var eventMgr = new EventManager();
+        eventMgr.setDebugMode(true);//outputs to browser consoles error msgs
+        eventMgr.setLooseMode(false);//disable loose mode, enable strict mode
 
         /**
          * Strict mode example. We must pre-define all of our events.

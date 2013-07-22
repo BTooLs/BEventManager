@@ -14,7 +14,8 @@
         .blue {background-color: blue;}
     </style>
     <script type="text/javascript">
-        eventMgr.eventDebugMode(true);//outputs to browser consoles error msgs
+        var eventMgr = new EventManager();
+        eventMgr.setDebugMode(true);//outputs to browser consoles error msgs
         var listenerAutoId = null;
 
         /**

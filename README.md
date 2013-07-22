@@ -1,8 +1,8 @@
 BEventManager
 =============
     BEventManager - Javascript Custom Event Manager
-    version 0.3
-    31.05.2013
+    version 0.4.2
+    21.07.2013
     http://btools.eu
     https://github.com/BTooLs/BEventManager/
 
@@ -22,6 +22,7 @@ When to use this class ? Was created for these cases in mind:
 * loose / strict mode - auto define the events when defining the listeners, or not
 * create more events with one call
 * limit the number of event dispatches - auto destruct the event after a specific number of triggers
+* when dispatching an event, a data array can be send to all listeners as parameters
 
 ###Features - listeners (callbacks)
 * unique ID's - automatically generated or manually defined, each listener have one
@@ -30,16 +31,22 @@ When to use this class ? Was created for these cases in mind:
 * manually remove a listener (by type and id)
 * add a listener to the beginning of the queue (array shift)
 * custom thisArg and argsArray for each listener (used at call)
+* static arguments can be defined for each listeners and will be combined with the event sent data at dispatch
+* timeout global option for listeners to clear the callstacks
+* a delay can be set for each listener individually (setTimeout is used)
 
+###Examples
+Examples can be found in examples folder and more in the actual unit tests (tests/events.js).
+
+### Unit testing
+* Unit testing using jasmine  covering around 90% of the code
 
 Any clone / feedback / help / test is appreciated.
 
 ####To Do
-* copy the listener callback function, not use as reference
 * make it work with nodeJS (including log function)
-* add option to setTimeouts on listeners
 * add try/catch blocks and make it more secure
 * optimize it for large listeners queues
-* make it ready for requireJS as a module
+* test it in requireJS as a module
 * option to lock/disable parallel/async event triggering - unable to dispatch if the previous run didn't finished to
 run all listeners
